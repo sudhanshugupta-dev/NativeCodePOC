@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 
-export default function TabIndex() {
+export default function DrawerIndex() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/(tabs)/home');
+    router.replace('/(drawer)/home');
   }, [router]);
   return null;
 }
