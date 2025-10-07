@@ -14,8 +14,11 @@ export default function Index() {
         <Link href="/(tabs)" style={styles.link}>
           Tab Navigation
         </Link>
-        <Link href="/(home)" style={styles.link}>
-          Stack Navigation
+        <Link href="/(verify)" style={styles.link}>
+          Verify Face
+        </Link>
+        <Link href="/(register)" style={styles.link}>
+          Register Face
         </Link>
       </View>
     </View>
