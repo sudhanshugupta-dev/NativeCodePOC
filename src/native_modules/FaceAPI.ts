@@ -4,6 +4,7 @@ import { NativeModules } from 'react-native';
 const { FaceRecognizer: FaceRecognizerModule } = NativeModules;
 
 interface CompareResult {
+  success: any;
   match: boolean;
   score: number;
 }
@@ -28,10 +29,9 @@ class FaceAPIError extends Error {
 export { FaceAPIError };
 
 if (!FaceRecognizerModule) {
-  console.log(FaceRecognizerModule)
+  console.log(FaceRecognizerModule); // Likely logs `undefined`
   console.error("FaceRecognizer module missing!");
 }
-
 export default class FaceAPI {
   /**
    * Add a face for a given personId using Cloudinary URL
@@ -149,19 +149,11 @@ export default class FaceAPI {
       // Validate inputs first
       this.validateCompareInputs(storedUrl, localPath);
       
-      // Check if FaceRecognizer native module is available
-      if (!FaceRecognizerModule || typeof FaceRecognizerModule.compareFaces !== 'function') {
-        throw new FaceAPIError('MODULE_NOT_AVAILABLE', 'FaceRecognizer native module is not available');
-      }
-      
       // Call native module
       const res: CompareResult = await FaceRecognizerModule.compareFaces(storedUrl, localPath);
       
       // Validate response
-      if (!res || typeof res.match !== 'boolean' || typeof res.score !== 'number') {
-        throw new FaceAPIError('INVALID_RESPONSE', 'Invalid response from native module');
-      }
-      
+      console.log("response from native module", res);
       console.log('[FaceAPI] Compare result:', res);
       return res;
       

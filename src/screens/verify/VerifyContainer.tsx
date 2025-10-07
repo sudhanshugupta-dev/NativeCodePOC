@@ -1,4 +1,3 @@
-
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -7,6 +6,7 @@ import {
   Alert,
   Button,
   Image,
+  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -23,6 +23,7 @@ export default function VerifyContainer() {
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [storedImageUri, setStoredImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false); // for verifying face
 
   // Fetch stored Cloudinary image when userId changes
   useEffect(() => {
@@ -35,11 +36,8 @@ export default function VerifyContainer() {
       setLoading(true);
       const url = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${userId}.jpg`;
       try {
-        // Simple fetch to check if image exists
-        console.log("url", url);
-
+        console.log('Fetching image:', url);
         const res = await fetch(url);
-        console.log("Response", res)
         if (res.ok) setStoredImageUri(url);
         else setStoredImageUri(null);
       } catch (e) {
@@ -57,6 +55,7 @@ export default function VerifyContainer() {
     const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       quality: 0.8,
+      cameraType: ImagePicker.CameraType.front, 
     });
     if (!result.canceled) setCapturedUri(result.assets[0].uri);
   };
@@ -66,21 +65,30 @@ export default function VerifyContainer() {
       Alert.alert('Error', 'Please enter a valid ID and capture an image');
       return;
     }
-     console.log("we are  here", storedImageUri, capturedUri)
+
+    setProcessing(true);
+    console.log('Comparing:', { storedImageUri, capturedUri });
+
     try {
       const result = await FaceAPI.compare(storedImageUri, capturedUri);
+      console.log('Result:', result);
+
       Alert.alert(
         'Result',
-        result.match
-          ? `✅ Face matched! Score: ${result.score.toFixed(2)}`
-          : `❌ Not matched. Score: ${result.score.toFixed(2)}`
+        result.success
+          ? `✅ Face matched! : ${result.percentage.toFixed(2)}%`
+          : `❌ Not matched. : ${result.percentage.toFixed(2)}%`
       );
+
+      // Reset state
       setCapturedUri(null);
       setUserId('');
       setStoredImageUri(null);
     } catch (e) {
-      console.error(e);
+      console.error('Error:', e);
       Alert.alert('Error', 'Failed to verify face');
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -111,14 +119,25 @@ export default function VerifyContainer() {
         </View>
       )}
 
-      <Button title="Verify Face" onPress={verifyFace} disabled={loading || !storedImageUri} />
-      
-      <TouchableOpacity 
-        style={styles.registerButton} 
+      <Button title="Verify Face" onPress={verifyFace} disabled={loading || processing || !storedImageUri} />
+
+      <TouchableOpacity
+        style={styles.registerButton}
         onPress={() => router.push('/(register)')}
+        disabled={loading || processing}
       >
         <Text style={styles.registerButtonText}>New User? Register</Text>
       </TouchableOpacity>
+
+      {/* Loader Modal Overlay */}
+      <Modal transparent visible={processing}>
+        <View style={styles.overlay}>
+          <View style={styles.loaderBox}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loaderText}>Verifying Face...</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -141,4 +160,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderBox: {
+    backgroundColor: 'white',
+    padding: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+  },
+  loaderText: { marginTop: 10, fontSize: 16, color: '#333' },
 });
