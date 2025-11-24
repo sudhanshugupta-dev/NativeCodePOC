@@ -15,3 +15,4 @@ class FaceRecognizerPackage : ReactPackage {
         return emptyList()
     }
 }
+

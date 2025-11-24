@@ -27,6 +27,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="dynamicuilist"/>
+        <data android:scheme="exp+dynamicuilist"/>
       </intent-filter>
     </activity>
   </application>
